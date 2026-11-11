@@ -8,6 +8,7 @@ A responsive, installable fitness and consistency tracker for Android and deskto
 - Meal rotation ideas
 - XP, ranks, achievements and weekly consistency streaks
 - Exercise-specific strength log and progress chart
+- Live local time/date display and navigable monthly activity calendar
 - Customisable reminders and notification permission
 - JSON backup export and offline caching
 
