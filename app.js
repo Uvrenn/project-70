@@ -15,10 +15,13 @@ function dateFromKey(dateKey){const parts=dateKey.split('-').map(Number);return 
 function displayDate(date,options={weekday:'long',day:'numeric',month:'long',year:'numeric'}){return new Intl.DateTimeFormat(undefined,options).format(date)}
 let calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1,12);
 let calendarSelected=key();
+let lastLiveDate=key();
 function updateLiveClock(){
  const now=new Date();
  $('#liveTime').textContent=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now);
  $('#liveDate').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(now)+' · '+(Intl.DateTimeFormat().resolvedOptions().timeZone||'Local time');
+ const today=key();
+ if(today!==lastLiveDate){lastLiveDate=today;calendarMonth=new Date(now.getFullYear(),now.getMonth(),1,12);calendarSelected=today;render();}
 }
 function calendarSummary(dateKey){
  const workouts=state.workouts.filter(x=>x.date===dateKey);
