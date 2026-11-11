@@ -58,7 +58,7 @@ function renderCalendar(){
    cells.push('<button type="button" class="'+classes.join(' ')+'" data-calendar-date="'+dateKey+'" aria-label="'+displayDate(date)+ (summary.hasActivity?', activity recorded':'') +'">'+day+(summary.hasActivity?'<i></i>':'')+'</button>');
  }
  $('#calendarDays').innerHTML=cells.join('');
- $('[data-calendar-date]').forEach(button=>button.onclick=()=>{calendarSelected=button.dataset.calendarDate;renderCalendar()});
+ $$('[data-calendar-date]').forEach(button=>button.onclick=()=>{calendarSelected=button.dataset.calendarDate;renderCalendar()});
  renderCalendarDetail();
 }
 function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
