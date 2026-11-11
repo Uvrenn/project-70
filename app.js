@@ -91,5 +91,12 @@ setInterval(checkReminders,30000);checkReminders();
 $('#settingsBtn').onclick=()=>$('#settingsDialog').showModal();
 $('#exportBtn').onclick=()=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.href=u;a.download='project70-backup.json';a.click();URL.revokeObjectURL(u)};
 $('#resetBtn').onclick=()=>{if(confirm('Clear all Project 70 logs stored in this browser?')){state=JSON.parse(JSON.stringify(defaults));save();$('#settingsDialog').close()}};
-if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker'in navigator&&location.protocol!=='file:'){
+ const hadController=!!navigator.serviceWorker.controller;
+ let reloaded=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if(hadController&&!reloaded){reloaded=true;location.reload();}
+ });
+ navigator.serviceWorker.register('./sw.js').then(reg=>reg.update()).catch(()=>{});
+}
 $('#notifStatus').textContent=('Notification'in window&&Notification.permission==='granted')?'Enabled':'Not enabled';render();updateLiveClock();setInterval(updateLiveClock,1000);
