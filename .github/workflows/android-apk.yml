@@ -1,0 +1,68 @@
+name: Build Project 70 Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: project70-android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Bundle the latest Project 70 web app
+        run: |
+          mkdir -p android/app/src/main/assets/www
+          cp index.html app.js styles.css manifest.webmanifest icon.svg android/app/src/main/assets/www/
+
+      - name: Build debug APK
+        run: gradle --no-daemon --stacktrace --project-dir android :app:assembleDebug
+
+      - name: Upload APK build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-70-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish latest APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest "$APK" --clobber
+          else
+            gh release create android-latest "$APK" \
+              --title "Project 70 Android (Latest)" \
+              --notes "Debug-signed Android build for personal testing. This APK is not a Play Store release. The app bundles the current Project 70 tracker and supports local Android notifications." \
+              --prerelease \
+              --target "$GITHUB_SHA"
+          fi
