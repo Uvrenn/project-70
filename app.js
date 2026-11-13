@@ -84,9 +84,24 @@ $('#chartExercise').onchange=drawChart;window.addEventListener('resize',drawChar
 $('#calendarPrev').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1,12);renderCalendar()};
 $('#calendarNext').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1,12);renderCalendar()};
 $('#calendarToday').onclick=()=>{const now=new Date();calendarMonth=new Date(now.getFullYear(),now.getMonth(),1,12);calendarSelected=key();renderCalendar()};
-$('#enableNotifBtn').onclick=async()=>{if(!('Notification'in window)){toast('Notifications are not supported');return}const p=await Notification.requestPermission();$('#notifStatus').textContent=p==='granted'?'Enabled':p==='denied'?'Blocked':'Not enabled'};
-$('#saveRemindersBtn').onclick=()=>{state.reminders={workout:$('#workoutTime').value,meal:$('#mealTime').value,recovery:$('#recoveryTime').value};state.notified={};save();toast('Reminder times saved')};
-function checkReminders(){if(!('Notification'in window)||Notification.permission!=='granted')return;const hm=new Date().toTimeString().slice(0,5),k=key();[['workout','Workout quest','Your scheduled training window is here.'],['meal','Meal check-in','Time for a balanced meal.'],['recovery','Recovery check','Wind down and make room for sleep.']].forEach(r=>{const token=k+'-'+r[0];if(state.reminders[r[0]]===hm&&!state.notified[token]){new Notification('Project 70 · '+r[1],{body:r[2],icon:'icon.svg'});state.notified[token]=true;localStorage.setItem('p70state',JSON.stringify(state))}})}
+function syncNativeReminders(){
+ if(!window.Project70Native)return;
+ if(!window.Project70Native.notificationsEnabled())return;
+ window.Project70Native.syncReminders(state.reminders.workout,state.reminders.meal,state.reminders.recovery);
+}
+window.onNativeNotificationPermission=function(granted){
+ $('#notifStatus').textContent=granted?'Enabled':'Blocked';
+ if(granted){syncNativeReminders();toast('Android reminders enabled')}
+ else toast('Notifications were not enabled in Android settings');
+};
+$('#enableNotifBtn').onclick=async()=>{
+ if(window.Project70Native){window.Project70Native.requestNotifications();return}
+ if(!('Notification'in window)){toast('Notifications are not supported');return}
+ const p=await Notification.requestPermission();
+ $('#notifStatus').textContent=p==='granted'?'Enabled':p==='denied'?'Blocked':'Not enabled';
+};
+$('#saveRemindersBtn').onclick=()=>{state.reminders={workout:$('#workoutTime').value,meal:$('#mealTime').value,recovery:$('#recoveryTime').value};state.notified={};save();syncNativeReminders();toast('Reminder times saved')};
+function checkReminders(){if(window.Project70Native||!('Notification'in window)||Notification.permission!=='granted')return;const hm=new Date().toTimeString().slice(0,5),k=key();[['workout','Workout quest','Your scheduled training window is here.'],['meal','Meal check-in','Time for a balanced meal.'],['recovery','Recovery check','Wind down and make room for sleep.']].forEach(r=>{const token=k+'-'+r[0];if(state.reminders[r[0]]===hm&&!state.notified[token]){new Notification('Project 70 · '+r[1],{body:r[2],icon:'icon.svg'});state.notified[token]=true;localStorage.setItem('p70state',JSON.stringify(state))}})}
 setInterval(checkReminders,30000);checkReminders();
 $('#settingsBtn').onclick=()=>$('#settingsDialog').showModal();
 $('#exportBtn').onclick=()=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.href=u;a.download='project70-backup.json';a.click();URL.revokeObjectURL(u)};
@@ -99,4 +114,4 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
  });
  navigator.serviceWorker.register('./sw.js').then(reg=>reg.update()).catch(()=>{});
 }
-$('#notifStatus').textContent=('Notification'in window&&Notification.permission==='granted')?'Enabled':'Not enabled';render();updateLiveClock();setInterval(updateLiveClock,1000);
+$('#notifStatus').textContent=window.Project70Native?(window.Project70Native.notificationsEnabled()?'Enabled':'Not enabled'):(('Notification'in window&&Notification.permission==='granted')?'Enabled':'Not enabled');render();updateLiveClock();setInterval(updateLiveClock,1000);if(window.Project70Native)syncNativeReminders();
