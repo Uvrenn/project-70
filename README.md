@@ -28,3 +28,7 @@ Logs stay in this browser's local storage. Export a JSON backup before clearing 
 
 ## Safety
 Follow any medical restrictions and obtain appropriate clinician clearance before starting resistance training.
+
+## Android app
+
+The native Android project lives in `android/`. The Android build workflow creates a debug-signed APK and publishes the latest personal-testing build under [GitHub Releases](https://github.com/Uvrenn/project-70/releases/tag/android-latest). Download the APK there to install Project 70 on an Android device. The debug APK is for personal testing, not Play Store distribution.
